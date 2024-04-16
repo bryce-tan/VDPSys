@@ -1,4 +1,5 @@
 #include "placer.h"
+#include <iostream>
 
 Placer::Placer(RequestQueue& q, Monitor& m, std::vector<Warehouse>& w)
     : queue(q), monitor(m), warehouses(w) {}
@@ -9,9 +10,9 @@ void Placer::processNextRequest() {
         int warehouseIndex = monitor.findLeastUtilizedWarehouseIndex(warehouses);
         if (warehouseIndex >= 0 && warehouseIndex < warehouses.size()) {
             if (warehouses[warehouseIndex].addDisk(request.size)) {
-                // Log success
+                std::cout << "A " << request.size << " TB disk mapped into warehouse" << warehouseIndex + 1 << std::endl;
             } else {
-                // Log failure or retry
+                std::cout << "Failed to place a " << request.size << " TB disk into warehouse" << warehouseIndex + 1 << " (not enough space)" << std::endl;
             }
         }
     }

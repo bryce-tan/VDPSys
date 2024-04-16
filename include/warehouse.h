@@ -10,6 +10,7 @@ public:
     Warehouse(int cap);
     bool addDisk(int size);
     float utilization() const; // Returns the current utilization percentage
+    bool isFull() const;
 };
 
 #endif // WAREHOUSE_H

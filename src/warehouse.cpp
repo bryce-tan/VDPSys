@@ -14,3 +14,7 @@ bool Warehouse::addDisk(int size) {
 float Warehouse::utilization() const {
     return static_cast<float>(used) / capacity;
 }
+
+bool Warehouse::isFull() const{
+    return used >= capacity;
+}
