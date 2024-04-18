@@ -29,7 +29,7 @@ int Monitor::findLeastUtilizedWarehouseIndex(const std::vector<Warehouse>& wareh
     return index;
 }
 
-bool Monitor::allWarehouseFull() const{
+bool Monitor::allWarehousesFull() const{
     for (bool available : warehouseAvailability){
         if (available) return false;
     }

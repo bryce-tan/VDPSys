@@ -7,6 +7,11 @@
 #include <iostream>
 #include <random>
 #include <string>
+#include <thread>
+#include <iomanip>
+void clearScreen(){
+    std::cout << "\033[2J\033[H";
+}
 
 int main() {
 
@@ -25,31 +30,65 @@ int main() {
     //Initialize
     RequestQueue queue;
     std::vector<Warehouse> warehouses = {
-        Warehouse(100), // Initialize warehouses with capacities
-        Warehouse(200)
+        Warehouse(10000), // Initialize warehouses with capacities
+        
+        Warehouse(20000),
+        Warehouse(20000),
+        Warehouse(30000),
+        Warehouse(40000),
+        Warehouse(40000),
     };
     Monitor monitor(warehouses.size());
     Placer placer(queue, monitor, warehouses);
 
-    // Setup a random number generator for Poisson-distributed arrival times
-    std::default_random_engine generator(std::random_device{}());
-    std::poisson_distribution<int> distribution(2); // Example mean arrival rate
+    // Random
+    std::random_device rd;
+    std::default_random_engine generator(rd());
+
+    // Threads
+    std::atomic<int> totalDisksPlaced(0); // Tracing the VDs
+     // Treads for status outputs
+    std::thread statusThread([&]() {
+        while (!monitor.allWarehousesFull()) {
+            std::this_thread::sleep_for(std::chrono::microseconds(100)); // Update every 1s
+            // clearScreen();
+            std::cout << "Total disks placed: " << totalDisksPlaced << std::endl;
+            for (size_t i = 0; i < warehouses.size(); ++i) {
+                float utilization = warehouses[i].utilization();
+                std::cout << "Warehouse " << i + 1 << " utilization: " 
+                          << std::fixed << std::setprecision(2) << utilization * 100.0f << "% ";
+                int progressBarWidth = 50; // Width of bars
+                int pos = progressBarWidth * utilization;
+                std::cout << "[";
+                for (int j = 0; j < progressBarWidth; ++j) {
+                    if (j < pos) std::cout << "=";
+                    else if (j == pos) std::cout << ">";
+                    else std::cout << " ";
+                }
+                std::cout << "]\n";
+            }
+            std::cout << std::endl;
+        }
+    });
+
 
     // Main loop to process requests
     while (!monitor.allWarehousesFull()) {
-        // Check for the arrival of a new disk request
-        if (distribution(generator) > 0) {
-            int diskSize = std::uniform_int_distribution<int>(1, 50)(generator); // Random disk size between 1 and 50
-            queue.enqueue(DiskRequest(diskSize));
-            std::cout << "A " << diskSize << " TB disk arrives." << std::endl;
-        }
+        // VD arrival simulation
+        int diskSize = std::uniform_int_distribution<int>(1,20)(generator);
+        queue.enqueue(DiskRequest(diskSize));
         monitor.updateAvailability(warehouses);
-        // Process any pending requests
-        placer.processNextRequest();
-
-        // Simulate time passing
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        // Processing VD placement
+        if(!queue.isEmpty()){
+            if (placer.processNextRequest()){
+                totalDisksPlaced++;
+            }
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
+
+    statusThread.join();
+
     std::cout << "All warehouses are full. Simulation terminated." << std::endl;
     return 0; // This line will actually never be reached due to the infinite loop
 }

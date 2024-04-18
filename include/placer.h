@@ -14,7 +14,7 @@ private:
 
 public:
     Placer(RequestQueue& q, Monitor& m, std::vector<Warehouse>& w);
-    void processNextRequest();
+    bool processNextRequest();
 };
 
 #endif // PLACER_H
